@@ -1,8 +1,8 @@
 {
   "Author": "veyn",
   "Name": "vnavmesh",
-  "Punchline": "Move around!",
-  "Description": "Utility to automatically move the character around in the world, skilfully avoiding any obstacles.",
+  "Punchline": "自动寻路/移动核心 (Navmesh)",
+  "Description": "自动移动角色，智能避开障碍物的导航网格工具。",
   "InternalName": "vnavmesh",
   "ApplicableVersion": "any",
   "IconUrl": "https://raw.githubusercontent.com/awgil/ffxiv_navmesh/8dab2e675e51a03b1827d94e77616a8144892a72/icon2.png"

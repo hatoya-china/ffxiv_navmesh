@@ -53,23 +53,23 @@ public sealed class Plugin : IDalamudPlugin
         var cmd = new CommandInfo(OnCommand)
         {
             HelpMessage = """
-            Opens the debug menu.
-            /vnav moveto <X> <Y> <Z> → move to raw coordinates
-            /vnav movedir <X> <Y> <Z> → move this many units over (relative to player facing)
-            /vnav movetarget → move to target's position
-            /vnav moveflag → move to flag position
-            /vnav flyto <X> <Y> <Z> → fly to raw coordinates
-            /vnav flydir <X> <Y> <Z> → fly this many units over (relative to player facing)
-            /vnav flytarget → fly to target's position
-            /vnav flyflag → fly to flag position
-            /vnav stop → stop all movement
-            /vnav reload → reload current territory's navmesh from cache
-            /vnav rebuild → rebuild current territory's navmesh from scratch
-            /vnav aligncamera → toggle aligning camera to movement direction
-            /vnav aligncamera true|yes|enable → enable aligning camera to movement direction
-            /vnav aligncamera false|no|disable → disable aligning camera to movement direction
-            /vnav dtr → toggle dtr status
-            /vnav collider → toggle collision debug visualization
+            打开调试/设置菜单
+            /vnav moveto <X> <Y> <Z> → 移动到指定坐标 (X Y Z)
+            /vnav movedir <X> <Y> <Z> → 相对移动 (基于当前朝向移动 X Y Z 距离)
+            /vnav movetarget → 移动到当前目标位置
+            /vnav moveflag → 移动到地图旗帜(Flag)位置
+            /vnav flyto <X> <Y> <Z> → 飞行到指定坐标
+            /vnav flydir <X> <Y> <Z> → 相对飞行 (基于当前朝向)
+            /vnav flytarget → 飞行到当前目标位置
+            /vnav flyflag → 飞行到地图旗帜位置
+            /vnav stop → 停止所有移动
+            /vnav reload → 从缓存重载当前地图网格
+            /vnav rebuild → 强制重建当前地图网格 (无视缓存)
+            /vnav aligncamera → 切换：移动时自动调整视角朝向
+            /vnav aligncamera true|yes|enable → 开启：移动时自动调整视角
+            /vnav aligncamera false|no|disable → 关闭：移动时自动调整视角
+            /vnav dtr → 切换 DTR 状态栏显示
+            /vnav collider → 切换碰撞体调试显示
             """,
 
             ShowInHelp = true,

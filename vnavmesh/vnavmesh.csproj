@@ -4,7 +4,7 @@
     <Authors></Authors>
     <Company></Company>
     <Version>0.0.0.0</Version>
-    <Description>Move around!</Description>
+    <Description>自动寻路/移动核心 (Navmesh)</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/awgil/ffxiv_navmesh</PackageProjectUrl>
   </PropertyGroup>
