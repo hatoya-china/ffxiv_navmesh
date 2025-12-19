@@ -54,205 +54,129 @@ public class NavmeshSettings
     public void Draw()
     {
         DrawConfigFloat(ref CellSize, 0.1f, 1.0f, 0.01f, "光栅化：单元格大小 (#cs)", """
-            The xz-plane cell size to use for fields. [Limit: > 0] [Units: world]
-
-            The voxelization cell size #cs defines the voxel size along both axes of
-            the ground plane: x and z in Recast. This value is usually derived from the
-            character radius `r`. A recommended starting value for #cs is either `r/2`
-            or `r/3`. Smaller values of #cs will increase rasterization resolution and
-            navmesh detail, but total generation time will increase exponentially.  In
-            outdoor environments, `r/2` is often good enough.  For indoor scenes with
-            tight spaces you might want the extra precision, so a value of `r/3` or
-            smaller may give better results.
-
-            The initial instinct is to reduce this value to something very close to zero
-            to maximize the detail of the generated navmesh. This quickly becomes a case
-            of diminishing returns, however. Beyond a certain point there's usually not
-            much perceptable difference in the generated navmesh, but huge increases in
-            generation time.  This hinders your ability to quickly iterate on level
-            designs and provides little benefit.  The general recommendation here is to
-            use as large a value for #cs as you can get away with.
-
-            #cs and #ch define voxel/grid/cell size.  So their values have significant
-            side effects on all parameters defined in voxel units.
-
-            The minimum value for this parameter depends on the platform's floating point
-            accuracy, with the practical minimum usually around 0.05.
+            【体素精度】(Cell Size) 核心分辨率。决定将物理世界切分为多细小的方块。
+            数值越小 = 贴合度极高，能识别栏杆缝隙，但构建时间指数级暴涨。
+            建议：野外 0.25，复杂副本/迷宫 0.15。
             """);
         DrawConfigFloat(ref CellHeight, 0.1f, 1.0f, 0.01f, "光栅化：单元格高度 (#ch)", """
-            The y-axis cell size to use for fields. [Limit: > 0] [Units: world]
-
-            The voxelization cell height #ch is defined separately in order to allow for
-            greater precision in height tests. A good starting point for #ch is half the
-            #cs value. Smaller #ch values ensure that the navmesh properly connects areas
-            that are only separated by a small curb or ditch.  If small holes are generated
-            in your navmesh around where there are discontinuities in height (for example,
-            stairs or curbs), you may want to decrease the cell height value to increase
-            the vertical rasterization precision of Recast.
-
-            #cs and #ch define voxel/grid/cell size.  So their values have significant
-            side effects on all parameters defined in voxel units.
-
-            The minimum value for this parameter depends on the platform's floating point
-            accuracy, with the practical minimum usually around 0.05.
+            【垂直精度】(Cell Height) Y轴切分粒度。
+            决定了系统能识别多微小的地面起伏（如地毯厚度）。
+            建议：保持 0.25 默认，过小会导致平地产生噪点。
             """);
         DrawConfigFloat(ref AgentHeight, 0.1f, 5.0f, 0.1f, "代理：高度 (Height)", """
-            Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: >= 3 * CellHeight] [Units: world]
-
-            This value defines the worldspace height `h` of the agent in voxels. The value
-            of #walkableHeight should be calculated as `ceil(h / ch)`.  Note this is based
-            on #ch not #cs since it's a height value.
-
-            Permits detection of overhangs in the source geometry that make the geometry
-            below un-walkable. The value is usually set to the maximum agent height.
+            【通行高度】(Height) 判定空气墙的垂直阈值。
+            只有净空高度 > 此值的通道，才会被标记为可行走。
+            设太大 = 进不去拉拉肥能进的洞；设太小 = 容易卡头。
             """);
         DrawConfigFloat(ref AgentRadius, 0.0f, 5.0f, 0.1f, "代理：半径 (Radius)", """
-            The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: >= 0] [Units: world]
-
-            The parameter #walkableRadius defines the worldspace agent radius `r` in voxels.
-            Most often, this value of #walkableRadius should be calculated as `ceil(r / cs)`.
-            Note this is based on #cs since the agent radius is always parallel to the ground
-            plane.
-
-            If the #walkableRadius value is greater than zero, the edges of the navmesh will
-            be pushed away from all obstacles by this amount.
-
-            A non-zero #walkableRadius allows for much simpler runtime navmesh collision checks.
-            The game only needs to check that the center point of the agent is contained within
-            a navmesh polygon.  Without this erosion, runtime navigation checks need to collide
-            the geometric projection of the agent's logical cylinder onto the navmesh with the
-            boundary edges of the navmesh polygons.
-
-            In general, this is the closest any part of the final mesh should get to an
-            obstruction in the source geometry.  It is usually set to the maximum
-            agent radius.
-
-            If you want to have tight-fitting navmesh, or want to reuse the same navmesh for
-            multiple agents with differing radii, you can use a `walkableRadius` value of zero.
-            Be advised though that you will need to perform your own collisions with the navmesh
-            edges, and odd edge cases issues in the mesh generation can potentially occur.  For
-            these reasons, specifying a radius of zero is allowed but is not recommended.
+            【碰撞半径】(Radius) 决定网格边缘的安全红线。
+            数值 = 角色模型半径 + 安全余量。
+            调大 = 远离墙壁（防卡死）；调小 = 贴墙极限走位（可能穿模）。
             """);
         DrawConfigFloat(ref AgentMaxClimb, 0.1f, 5.0f, 0.1f, "代理：最大攀爬高度 (Max Climb)", """
-            Maximum ledge height that is considered to still be traversable. [Limit: >= 0] [Units: world]
-
-            The #walkableClimb value defines the maximum height of ledges and steps that
-            the agent can walk up. Given a designer-defined `maxClimb` distance in world
-            units, the value of #walkableClimb should be calculated as `ceil(maxClimb / ch)`.
-            Note that this is using #ch not #cs because it's a height-based value.
-
-            Allows the mesh to flow over low lying obstructions such as curbs and
-            up/down stairways. The value is usually set to how far up/down an agent can step.
+            【最大跨步】(Max Climb) 决定台阶判定的阈值。
+            角色能直接走上去的最大高度差。
+            若在楼梯处卡顿，通常是因为此值 < 台阶实际高度。
             """);
         DrawConfigFloat(ref AgentMaxSlopeDeg, 0.0f, 90.0f, 1.0f, "代理：最大坡度 (Max Slope)", """
-            The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees]
-
-            The parameter #walkableSlopeAngle is to filter out areas of the world where
-            the ground slope would be too steep for an agent to traverse. This value is
-            defined as a maximum angle in degrees that the surface normal of a polgyon
-            can differ from the world's up vector.  This value must be within the range
-            `[0, 90]`.
-
-            The practical upper limit for this parameter is usually around 85 degrees.
+            【爬坡极限】(Max Slope) 决定斜坡是否为空气墙。
+            超过此角度的表面将被剔除出导航网格。
+            建议：55度可覆盖绝大多数游戏地形。
             """);
         DrawConfigFilteringCombo(ref Filtering, "过滤 (Filtering)", """
-            Select which filtering passes to apply to voxelized geometry to remove some classes of artifacts.
+            【障碍过滤】(Filtering) 决定哪些特殊地形被剔除。
+            LowHanging = 剔除低矮悬垂物；LedgeSpans = 处理悬崖边缘。
+            建议：全选，保证生成的网格最干净。
             """);
         DrawConfigFloat(ref RegionMinSize, 0.0f, 150.0f, 1.0f, "区域：最小尺寸", """
-            The minimum number of cells allowed to form isolated island areas. [Limit: >= 0] [Units: voxels]
-
-            Watershed partitioning is really prone to noise in the input distance field.
-            In order to get nicer areas, the areas are merged and small disconnected areas
-            are removed after the water shed partitioning. The parameter #minRegionArea
-            describes the minimum isolated region size that is still kept. A region is
-            removed if the number of voxels in the region is less than the square of
-            #minRegionArea.
-
-            Any regions that are smaller than this area will be marked as unwalkable.
-            This is useful in removing useless regions that can sometimes form on
-            geometry such as table tops, box tops, etc.
+            【孤岛剔除】(Min Size) 噪点过滤器。
+            小于此体素数的独立区域（如浮空石、柱子顶）将被直接抹除。
+            防止寻路算法计算出无法抵达的无效路径。
             """);
         DrawConfigFloat(ref RegionMergeSize, 0.0f, 150.0f, 1.0f, "区域：合并尺寸", """
-            Any regions with a span count smaller than this value will, if possible, be merged with larger regions. [Limit: >=0] [Units: voxels]
-
-            The triangulation process works best with small, localized voxel regions.
-            The parameter #mergeRegionArea controls the maximum voxel area of a region
-            that is allowed to be merged with another region.  If you see small patches
-            missing here and there, you could lower the #minRegionArea value.
+            【碎片合并】(Merge Size) 拓扑优化参数。
+            过小的区域会被强行融合进邻近的主区域，减少多边形碎片。
             """);
         DrawConfigPartitioningCombo(ref Partitioning, "分区算法", """
-            There are 3 martitioning methods, each with some pros and cons.
+            【分区算法】(Partitioning) 网格切割逻辑。
+            Watershed (分水岭) = 质量最高，计算最慢；Monotone = 速度快，质量差。
+            建议：FFXIV 地形复杂，请锁死 Watershed。
             """);
         DrawConfigFloat(ref PolyMaxEdgeLen, 0.0f, 50.0f, 1.0f, "多边形化：最大边长", """
-            The maximum allowed length for contour edges along the border of the mesh. [Limit: >= 0] [Units: world]
-
-            In certain cases, long outer edges may decrease the quality of the resulting
-            triangulation, creating very long thin triangles. This can sometimes be
-            remedied by limiting the maximum edge length, causing the problematic long
-            edges to be broken up into smaller segments.
-
-            The parameter #maxEdgeLen defines the maximum edge length and is defined in
-            terms of voxels. A good value for #maxEdgeLen is something like
-            `walkableRadius * 8`. A good way to adjust this value is to first set it really
-            high and see if your data creates long edges. If it does, decrease #maxEdgeLen
-            until you find the largest value which improves the resulting tesselation.
-
-            Extra vertices will be inserted as needed to keep contour edges below this
-            length. A value of zero effectively disables this feature.
+            【最大边长】防止生成细长型多边形。
+            网格边缘超过此长度时会被强制切分。数值越小，网格边缘越贴合曲线墙壁。
             """);
         DrawConfigFloat(ref PolyMaxSimplificationError, 0.1f, 3.0f, 0.1f, "多边形化：最大简化误差", """
-            The maximum distance a simplfied contour's border edges should deviate from the original raw contour. [Limit: >=0] [Units: voxels]
-
-            When the rasterized areas are converted back to a vectorized representation,
-            the #maxSimplificationError describes how loosely the simplification is done.
-            The simplification process uses the Ramer–Douglas-Peucker algorithm,
-            and this value describes the max deviation in voxels.
-
-            Good values for #maxSimplificationError are in the range `[1.1, 1.5]`.
-            A value of `1.3` is a good starting point and usually yields good results.
-            If the value is less than `1.1`, some sawtoothing starts to appear at the
-            generated edges.  If the value is more than `1.5`, the mesh simplification
-            starts to cut some corners it shouldn't.
-
-            The effect of this parameter only applies to the xz-plane.
+            【简化误差】决定网格边缘的"圆滑度"。
+            允许网格轮廓偏离原始体素的最大距离。
+            数值越小 = 边缘越精准（锯齿越少）；数值越大 = 顶点越少（性能越好）。
             """);
         DrawConfigInt(ref PolyMaxVerts, 3, 12, 1, "多边形化：每多边形最大顶点数", """
-            The maximum number of vertices allowed for polygons generated during the contour to polygon conversion process. [Limit: >= 3]
-
-            If the mesh data is to be used to construct a Detour navigation mesh, then the upper limit
-            is limited to <= #DT_VERTS_PER_POLYGON.
+            【多边形顶点数】决定网格的几何复杂度。
+            默认 6 (六边形)。增加此值可生成更复杂的多边形，但也增加了寻路算法的负担。
             """); // TODO: fix the limit to make it always suitable for detour
         DrawConfigFloat(ref DetailSampleDist, 0.0f, 16.0f, 1.0f, "细节网格：采样距离", """
-            Sampling distance to use when generating the detail mesh. [Limits: 0 or >= 0.9] [Units: voxels]
-            """); // TODO: verify that it's actually in voxels
+            【高度采样率】决定地面的平整度。
+            每隔多少距离采样一次高度。
+            数值越小 = 完美还原楼梯坡度；数值越大 = 楼梯变成斜坡。
+            """);
         DrawConfigFloat(ref DetailMaxSampleError, 0.0f, 16.0f, 1.0f, "细节网格：最大采样误差", """
-            The maximum distance the detail mesh surface should deviate from heightfield data. (For height detail only.) [Limit: >= 0] [Units: world]
-            """); // TODO: verify that it's actually in voxels
+            【高度拟合误差】允许网格表面偏离真实地面的最大高度差。
+            设得太大 = 角色看起来像是在离地漂浮或陷入地下。
+            """);
         DrawConfigInt(ref NumTiles[0], 1, 32, 1, "L1 瓦片计数", """
-            Number of tiles per axis for first-level subdivision. Has to be power-of-2. [Limit: 1 <= value <= 32]
-            Affects both navmesh and nav volume.
+            【一级瓦片】地图切分的第一层级。
+            必须是 2 的幂次方。影响导航网格和导航体积。
             """);
         DrawConfigInt(ref NumTiles[1], 1, 32, 1, "L2 瓦片计数", """
-            Number of tiles per axis for second-level subdivision. Has to be power-of-2. [Limit: 1 <= value <= 32]
-            Affects only nav volume.
+            【二级瓦片】地图切分的第二层级。
+            必须是 2 的幂次方。仅影响导航体积（飞行寻路）。
             """);
         DrawConfigInt(ref NumTiles[2], 1, 32, 1, "L3 体素计数", """
-            Number of leaf voxels per axis per tile. Has to be power-of-2. [Limit: 1 <= value <= 32]
-            Affects only nav volume.
+            【叶节点体素】每个瓦片内的体素数量。
+            必须是 2 的幂次方。仅影响导航体积（飞行寻路）。
             """);
 
         ImGui.Checkbox("生成爬下连接点", ref GenerateEdgeClimbLinks);
-        ImGui.Checkbox("生成跳下连接点", ref GenerateEdgeJumpLinks);
-        DrawConfigFloat(ref GroundTolerance, 0, 50, 0.1f, "地面容差", "Undocumented");
-        DrawConfigFloat(ref ClimbDownDistance, 0, 100, 0.1f, "爬下距离", """
-            Horizontal distance for edge climb samples.
+        ImGuiComponents.HelpMarker("""
+            【自动生成路径】是否允许算法自动计算爬墙的路径点。
+            勾选后，插件会尝试在断崖间建立隐形连接线。
             """);
-        DrawConfigFloat(ref ClimbDownMaxHeight, 0, 100, 0.5f, "爬下最大高度", "Undocumented");
-        DrawConfigFloat(ref ClimbDownMinHeight, 0, 100, 0.5f, "爬下最小高度", "Undocumented");
-        DrawConfigFloat(ref EdgeJumpEndDistance, 0, 100, 0.5f, "边缘跳跃结束距离", "Undocumented");
-        DrawConfigFloat(ref EdgeJumpHeight, 0, 10, 0.1f, "边缘跳跃高度", "Undocumented");
-        DrawConfigFloat(ref EdgeJumpMaxDrop, 0, 100, 0.1f, "边缘跳跃最大落差", "Undocumented");
-        DrawConfigFloat(ref EdgeJumpMinDrop, 0, 100, 0.1f, "边缘跳跃最小落差", "Undocumented");
+        ImGui.Checkbox("生成跳下连接点", ref GenerateEdgeJumpLinks);
+        ImGuiComponents.HelpMarker("""
+            【自动生成路径】是否允许算法自动计算跳崖的路径点。
+            勾选后，插件会尝试在断崖间建立隐形连接线。
+            """);
+        DrawConfigFloat(ref GroundTolerance, 0, 50, 0.1f, "地面容差", """
+            【地面吸附容差】判定起跳点是否"贴地"的宽容度。
+            如果有些跳跃点生成失败，尝试调大此值。
+            """);
+        DrawConfigFloat(ref ClimbDownDistance, 0, 100, 0.1f, "爬下距离", """
+            【爬行水平距离】边缘爬行采样的水平距离。
+            """);
+        DrawConfigFloat(ref ClimbDownMaxHeight, 0, 100, 0.5f, "爬下最大高度", """
+            【爬行物理限制】角色敢从多高爬下来的上限。
+            超出此高度的断崖将被视为"死路"，不会生成连接线。
+            """);
+        DrawConfigFloat(ref ClimbDownMinHeight, 0, 100, 0.5f, "爬下最小高度", """
+            【爬行物理限制】角色敢从多高爬下来的下限。
+            低于此高度的落差会被视为普通台阶，不生成爬行连接。
+            """);
+        DrawConfigFloat(ref EdgeJumpEndDistance, 0, 100, 0.5f, "边缘跳跃结束距离", """
+            【跳跃物理限制】角色最远能跳多远。
+            超出此距离的断崖将被视为"死路"，不会生成连接线。
+            """);
+        DrawConfigFloat(ref EdgeJumpHeight, 0, 10, 0.1f, "边缘跳跃高度", """
+            【跳跃物理限制】跳跃时的最大上升高度。
+            """);
+        DrawConfigFloat(ref EdgeJumpMaxDrop, 0, 100, 0.1f, "边缘跳跃最大落差", """
+            【跳跃物理限制】角色敢从多高跳下来的上限。
+            超出此高度的断崖将被视为"死路"，不会生成连接线。
+            """);
+        DrawConfigFloat(ref EdgeJumpMinDrop, 0, 100, 0.1f, "边缘跳跃最小落差", """
+            【跳跃物理限制】角色敢从多高跳下来的下限。
+            低于此高度的落差会被视为普通台阶，不生成跳跃连接。
+            """);
     }
 
     private void DrawConfigFloat(ref float value, float min, float max, float increment, string label, string help)
@@ -279,33 +203,21 @@ public class NavmeshSettings
             return;
         }
         DrawConfigFilteringEnum(ref value, Filter.LowHangingObstacles, "低垂障碍物", """
-            Marks non-walkable spans as walkable if their maximum is within #walkableClimb of the span below them.
-
-            This removes small obstacles and rasterization artifacts that the agent would be able to walk over
-            such as curbs.  It also allows agents to move up terraced structures like stairs.
-
-            Obstacle spans are marked walkable if: obstacleSpan.smax - walkableSpan.smax < walkableClimb
+            【低矮悬垂物过滤】将非可行走区域标记为可行走（如果它们的最大高度在下方区域的攀爬范围内）。
+            移除小障碍物和光栅化伪影，如路缘石。也允许角色走上楼梯等阶梯结构。
             """);
         DrawConfigFilteringEnum(ref value, Filter.LedgeSpans, "边缘跨度 (Ledge Spans)", """
-            Marks spans that are ledges as not-walkable.
-
-            A ledge is a span with one or more neighbors whose maximum is further away than #walkableClimb
-            from the current span's maximum.
-            This method removes the impact of the overestimation of conservative voxelization 
-            so the resulting mesh will not have regions hanging in the air over ledges.
-
-            A span is a ledge if: abs(currentSpan.smax - neighborSpan.smax) > walkableClimb
+            【悬崖边缘过滤】将悬崖边缘标记为不可行走。
+            悬崖是指一个或多个相邻区域的最大高度超出当前区域攀爬范围的区域。
+            防止生成的网格在悬崖上方悬空。
             """);
         DrawConfigFilteringEnum(ref value, Filter.WalkableLowHeightSpans, "可行走低高度跨度", """
-            Marks walkable spans as not walkable if the clearance above the span is less than the specified #walkableHeight.
-
-            For this filter, the clearance above the span is the distance from the span's 
-            maximum to the minimum of the next higher span in the same column.
-            If there is no higher span in the column, the clearance is computed as the
-            distance from the top of the span to the maximum heightfield height.
+            【低净空过滤】将净空高度不足的可行走区域标记为不可行走。
+            净空高度 = 当前区域顶部到同一列中下一个更高区域底部的距离。
+            防止角色卡头。
             """);
         DrawConfigFilteringEnum(ref value, Filter.Interiors, "内部区域 (Interiors)", """
-            Marks spans inside manifold geometry (or below non-manifold) as non-walkable.
+            【内部区域过滤】将流形几何体内部（或非流形几何体下方）的区域标记为不可行走。
             """);
     }
 
@@ -334,33 +246,28 @@ public class NavmeshSettings
         }
 
         DrawConfigPartitioningEnum(ref value, RcPartition.WATERSHED, "分水岭算法 (Watershed)", """
-            Watershed partitioning:
-             - the classic Recast partitioning
-             - creates the nicest tessellation
-             - usually slowest
-             - partitions the heightfield into nice regions without holes or overlaps
-             - the are some corner cases where this method creates produces holes and overlaps
-                - holes may appear when a small obstacles is close to large open area (triangulation can handle this)
-                - overlaps may occur if you have narrow spiral corridors (i.e stairs), this make triangulation to fail
-            Generally the best choice if you precompute the nacmesh, use this if you have large open areas.
+            【分水岭分区】经典 Recast 分区算法。
+            - 生成最漂亮的三角剖分
+            - 通常最慢
+            - 将高度场分割成无孔洞、无重叠的区域
+            - 极少数情况下可能产生孔洞（小障碍物靠近大开阔区域）或重叠（狭窄螺旋走廊如楼梯）
+            建议：FFXIV 地形复杂，推荐使用此算法。
             """);
         DrawConfigPartitioningEnum(ref value, RcPartition.MONOTONE, "单调分区 (Monotone)", """
-            Monotone partitioning:
-             - fastest
-             - partitions the heightfield into regions without holes and overlaps (guaranteed)
-             - creates long thin polygons, which sometimes causes paths with detours
-            Use this if you want fast navmesh generation.
+            【单调分区】最快的分区算法。
+            - 速度最快
+            - 保证无孔洞、无重叠
+            - 生成细长多边形，有时导致路径绕远
+            适用于需要快速生成导航网格的场景。
             """);
         DrawConfigPartitioningEnum(ref value, RcPartition.LAYERS, "分层 (Layer)", """
-            Layer partitioning
-             - quite fast
-             - partitions the heighfield into non-overlapping regions
-             - relies on the triangulation code to cope with holes (thus slower than monotone partitioning)
-             - produces better triangles than monotone partitioning
-             - does not have the corner cases of watershed partitioning
-             - can be slow and create a bit ugly tessellation (still better than monotone)
-               if you have large open areas with small obstacles (not a problem if you use tiles)
-            Good choice to use for tiled navmesh with medium and small sized tiles.
+            【分层分区】折中方案。
+            - 速度较快
+            - 将高度场分割成不重叠的区域
+            - 依赖三角剖分代码处理孔洞
+            - 比单调分区生成更好的三角形
+            - 没有分水岭的边角问题
+            适用于中小型瓦片的导航网格。
             """);
     }
 
