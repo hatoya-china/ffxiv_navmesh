@@ -97,12 +97,16 @@ public class NavmeshQuery
                 Service.Log.Error($"Failed to find a path from {from} ({startRef:X}) to {to} ({endRef:X}): failed to find straight path ({success.Value:X})");
             var res = straightPath.Select(p => p.pos.RecastToSystem()).ToList();
             res.Add(endPos.RecastToSystem());
+            if (Service.Config.EnableHumanLikeMovement)
+                res = PathRandomizer.ApplyCorridorRandomness(res, Service.Config.RandomCorridorWidth, Service.Config.RandomNoiseScale);
             return res;
         }
         else
         {
             var res = _lastPath.Select(r => MeshQuery.GetAttachedNavMesh().GetPolyCenter(r).RecastToSystem()).ToList();
             res.Add(endPos.RecastToSystem());
+            if (Service.Config.EnableHumanLikeMovement)
+                res = PathRandomizer.ApplyCorridorRandomness(res, Service.Config.RandomCorridorWidth, Service.Config.RandomNoiseScale);
             return res;
         }
     }

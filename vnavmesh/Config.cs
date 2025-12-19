@@ -24,6 +24,9 @@ public class Config
     public int StuckTimeoutMs = 500;
     public bool RetryOnStuck = true;
     public float RandomnessMultiplier = 1f;
+    public bool EnableHumanLikeMovement = true;
+    public float RandomCorridorWidth = 0.5f;
+    public float RandomNoiseScale = 0.2f;
     public int BuildMaxCores = 1;
 
     private static readonly int realMaxCores = Environment.ProcessorCount;
@@ -34,55 +37,73 @@ public class Config
 
     public void Draw()
     {
-        if (ImGui.Checkbox("Automatically load/build navigation data when changing zones", ref AutoLoadNavmesh))
+        if (ImGui.Checkbox("切换区域时自动加载/构建导航数据", ref AutoLoadNavmesh))
             NotifyModified();
-        if (ImGui.Checkbox("Enable DTR bar", ref EnableDTR))
+        if (ImGui.Checkbox("启用 DTR 状态栏显示", ref EnableDTR))
             NotifyModified();
-        if (ImGui.Checkbox("Show detailed query status in DTR", ref ShowQueryStatusInDTR))
+        if (ImGui.Checkbox("在 DTR 中显示详细查询状态", ref ShowQueryStatusInDTR))
             NotifyModified();
-        if (ImGui.Checkbox("Align camera to movement direction", ref AlignCameraToMovement))
+        if (ImGui.Checkbox("视角自动对齐移动方向", ref AlignCameraToMovement))
             NotifyModified();
         using (ImRaii.Disabled(!AlignCameraToMovement))
         {
             ImGui.SetNextItemWidth(200);
-            if (ImGui.SliderFloat("Camera height (degrees)", ref AlignCameraHeight, -75, 75))
+            if (ImGui.SliderFloat("视角高度 (度)", ref AlignCameraHeight, -75, 75))
                 NotifyModified();
         }
-        if (ImGui.Checkbox("Show active waypoints", ref ShowWaypoints))
+        if (ImGui.Checkbox("显示当前寻路点", ref ShowWaypoints))
             NotifyModified();
-        if (ImGui.Checkbox("Always visualize game collision", ref ForceShowGameCollision))
+        if (ImGui.Checkbox("始终可视化游戏碰撞体积", ref ForceShowGameCollision))
             NotifyModified();
-        if (ImGui.Checkbox("Cancel current path on player movement input", ref CancelMoveOnUserInput))
+        if (ImGui.Checkbox("玩家手动移动时取消寻路", ref CancelMoveOnUserInput))
             NotifyModified();
-        if (ImGui.Checkbox("Stop pathing when stuck", ref StopOnStuck))
+        if (ImGui.Checkbox("卡住时停止寻路", ref StopOnStuck))
             NotifyModified();
 
         ImGui.SetNextItemWidth(200);
-        if (ImGui.SliderInt("Max cores used during mesh build", ref BuildMaxCores, -8, realMaxCores))
+        if (ImGui.SliderInt("网格构建最大占用核心数", ref BuildMaxCores, -8, realMaxCores))
             NotifyModified();
-        ImGuiComponents.HelpMarker("0 = use all available; positive number = use that many cores; negative number = leave that many cores idle");
+        ImGuiComponents.HelpMarker("0 = 使用全部；正数 = 使用指定数量；负数 = 保留指定数量空闲");
 
         if (StopOnStuck)
         {
-            if (ImGui.SliderFloat("Stuck tolerance (yalms/second)", ref StuckTolerance, 0.5f, 3f))
+            if (ImGui.SliderFloat("卡住判定阈值 (米/秒)", ref StuckTolerance, 0.5f, 3f))
                 NotifyModified();
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("The minimum distance the object must move each frame to avoid being considered stuck.");
+                ImGui.SetTooltip("每帧移动距离低于此数值将被判定为卡住。");
 
-            if (ImGui.SliderInt("Stuck timeout (ms)", ref StuckTimeoutMs, 100, 10_000))
+            if (ImGui.SliderInt("卡住超时判定 (毫秒)", ref StuckTimeoutMs, 100, 10_000))
                 NotifyModified();
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("How long you can remain under the stuck threshold before stopping.");
+                ImGui.SetTooltip("处于卡住阈值下的持续时间超过此数值则停止。");
 
-            if (ImGui.Checkbox("Retry pathing after stop", ref RetryOnStuck))
+            if (ImGui.Checkbox("停止后尝试重新寻路", ref RetryOnStuck))
                 NotifyModified();
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("If enabled, the agent will attempt to re-path after being considered stuck.");
+                ImGui.SetTooltip("启用后，在判定卡住停止后将尝试重新规划路径。");
         }
 
         ImGui.SetNextItemWidth(200);
-        if (ImGui.SliderFloat("Randomness Multiplier", ref RandomnessMultiplier, 0f, 1.0f, "%.2f"))
+        if (ImGui.SliderFloat("随机性倍率", ref RandomnessMultiplier, 0f, 1.0f, "%.2f"))
             NotifyModified();
+
+        ImGui.Separator();
+        ImGui.TextColored(new System.Numerics.Vector4(0.5f, 0.8f, 1f, 1f), "拟人化移动设置");
+        ImGui.TextWrapped("开启后，角色将在寻路网格范围内进行S型随机移动，每个角色的路径轨迹均不相同。");
+
+        if (ImGui.Checkbox("启用拟人化移动 (防检测)", ref EnableHumanLikeMovement))
+            NotifyModified();
+
+        using (ImRaii.Disabled(!EnableHumanLikeMovement))
+        {
+            ImGui.SetNextItemWidth(200);
+            if (ImGui.DragFloat("走廊宽度 (米)", ref RandomCorridorWidth, 0.01f, 0.1f, 2.0f, "%.2f"))
+                NotifyModified();
+
+            ImGui.SetNextItemWidth(200);
+            if (ImGui.DragFloat("路径弯曲频率", ref RandomNoiseScale, 0.01f, 0.1f, 1.0f, "%.2f"))
+                NotifyModified();
+        }
     }
 
     public void Save(FileInfo file)
