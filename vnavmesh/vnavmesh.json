@@ -1,8 +1,8 @@
 {
-  "Author": "veyn",
-  "Name": "vnavmesh",
-  "Punchline": "自动寻路/移动核心 (Navmesh)",
-  "Description": "自动移动角色，智能避开障碍物的导航网格工具。",
+  "Author": "veyn (CN: hatoya-china)",
+  "Name": "vnavmesh [CN]",
+  "Punchline": "基于 Recast/Detour 的全地形自动寻路与导航网格核心",
+  "Description": "提供实时的 3D 导航网格 (Navmesh) 构建、路径规划与自动移动功能。本版本已集成全量 UI 汉化，并新增独家"拟人化防检测"移动算法，支持 S 型随机走位以规避脚本检测。",
   "InternalName": "vnavmesh",
   "ApplicableVersion": "any",
   "IconUrl": "https://raw.githubusercontent.com/awgil/ffxiv_navmesh/8dab2e675e51a03b1827d94e77616a8144892a72/icon2.png"
