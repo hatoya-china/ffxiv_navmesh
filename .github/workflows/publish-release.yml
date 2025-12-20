@@ -32,22 +32,20 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    # 关键修复步骤
+    # 调试：列出构建输出目录结构
+    - name: Debug - List build output
+      run: |
+        echo "=== Listing vnavmesh directory structure ==="
+        find vnavmesh/bin -type f 2>/dev/null || echo "vnavmesh/bin not found"
+        echo "=== End listing ==="
+
+    # 打包插件 (输出直接在 Release/ 下，因为 AppendTargetFrameworkToOutputPath=false)
     - name: Pack Plugin
       run: |
-        # 1. 先进入 Release 父目录
         cd vnavmesh/bin/Release/
-
-        # 2. 尝试进入以 net 开头的子目录 (兼容 net10.0, net10.0-windows 等)
-        # 如果没有子目录，这行报错会被忽略，直接在当前目录打包
-        cd net* || true
-
-        # 3. 打印当前路径确认为准
         echo "Packing files from: $(pwd)"
-        ls -la # 列出文件供检查
-
-        # 4. 打包所有文件 (*) 到项目根目录的 vnavmesh.zip
-        zip -r ../../../../vnavmesh.zip *
+        ls -la
+        zip -r ../../../vnavmesh.zip *
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -63,12 +61,10 @@ jobs:
         import os
         import glob
 
-        # 同样使用通配符查找 json，确保万无一失
-        # 优先查找深层目录
-        json_files = glob.glob('vnavmesh/bin/Release/net*/vnavmesh.json')
-        # 如果找不到，再试着找浅层目录
+        # 查找 vnavmesh.json (直接在 Release 下)
+        json_files = glob.glob('vnavmesh/bin/Release/vnavmesh.json')
         if not json_files:
-            json_files = glob.glob('vnavmesh/bin/Release/vnavmesh.json')
+            json_files = glob.glob('vnavmesh/bin/Release/net*/vnavmesh.json')
 
         if not json_files:
             print("Error: vnavmesh.json not found!")
