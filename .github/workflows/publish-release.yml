@@ -32,20 +32,13 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    # 调试：列出构建输出目录结构
-    - name: Debug - List build output
-      run: |
-        echo "=== Listing vnavmesh directory structure ==="
-        find vnavmesh/bin -type f 2>/dev/null || echo "vnavmesh/bin not found"
-        echo "=== End listing ==="
-
-    # 打包插件 (输出直接在 Release/ 下，因为 AppendTargetFrameworkToOutputPath=false)
+    # 打包插件 (输出在 x64/Release/ 下)
     - name: Pack Plugin
       run: |
-        cd vnavmesh/bin/Release/
+        cd vnavmesh/bin/x64/Release/
         echo "Packing files from: $(pwd)"
         ls -la
-        zip -r ../../../vnavmesh.zip *
+        zip -r ../../../../vnavmesh.zip *
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -59,21 +52,8 @@ jobs:
       run: |
         import json
         import os
-        import glob
 
-        # 查找 vnavmesh.json (直接在 Release 下)
-        json_files = glob.glob('vnavmesh/bin/Release/vnavmesh.json')
-        if not json_files:
-            json_files = glob.glob('vnavmesh/bin/Release/net*/vnavmesh.json')
-
-        if not json_files:
-            print("Error: vnavmesh.json not found!")
-            exit(1)
-
-        json_path = json_files[0]
-        print(f"Found json at: {json_path}")
-
-        with open(json_path, 'r') as f:
+        with open('vnavmesh/bin/x64/Release/vnavmesh.json', 'r') as f:
             plugin_info = json.load(f)
 
         tag = os.environ['GITHUB_REF_NAME']
