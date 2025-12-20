@@ -198,12 +198,12 @@ class DebugNavmeshCustom : IDisposable
 
     public void Draw()
     {
-        using (var nsettings = _tree.Node("Navmesh properties"))
+        using (var nsettings = _tree.Node("网格属性配置"))
         {
             if (nsettings.Opened)
             {
-                ImGui.Checkbox("Support flying", ref _settings.Flyable);
-                ImGui.Checkbox("Load existing territory customization", ref _settings.LoadExisting);
+                ImGui.Checkbox("启用飞行支持", ref _settings.Flyable);
+                ImGui.Checkbox("加载当前区域的自定义配置", ref _settings.LoadExisting);
                 _settings.Settings.Draw();
             }
         }
