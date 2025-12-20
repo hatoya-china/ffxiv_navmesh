@@ -43,7 +43,7 @@ public class DebugExtractedCollision : IDisposable
 
     private unsafe void DrawDefinition()
     {
-        using var nr = _tree.Node("Scene definition");
+        using var nr = _tree.Node("场景定义");
         if (!nr.Opened)
             return;
 
@@ -126,7 +126,7 @@ public class DebugExtractedCollision : IDisposable
 
     private void DrawExtractor()
     {
-        using var nr = _tree.Node("Extracted geometry");
+        using var nr = _tree.Node("提取的几何体");
         if (nr.SelectedOrHovered)
             Visualize();
         if (!nr.Opened)

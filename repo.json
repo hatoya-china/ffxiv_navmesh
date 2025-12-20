@@ -1,9 +1,9 @@
 [
     {
-        "Author": "veyn",
-        "Name": "vnavmesh",
+        "Author": "veyn (CN: hatoya-china)",
+        "Name": "vnavmesh [CN]",
         "InternalName": "vnavmesh",
-        "AssemblyVersion": "0.0.0.0",
+        "AssemblyVersion": "1.0.0.0",
         "Description": "\u81ea\u52a8\u5bfb\u8def/\u79fb\u52a8\u6838\u5fc3 (Navmesh)",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 14,
@@ -12,7 +12,7 @@
         "CanUnloadAsync": false,
         "LoadPriority": 0,
         "IconUrl": "https://raw.githubusercontent.com/awgil/ffxiv_navmesh/8dab2e675e51a03b1827d94e77616a8144892a72/icon2.png",
-        "Punchline": "\u81ea\u52a8\u5bfb\u8def/\u79fb\u52a8\u6838\u5fc3 (Navmesh)",
+        "Punchline": "\u57fa\u4e8e Recast/Detour \u7684\u5168\u5730\u5f62\u81ea\u52a8\u5bfb\u8def\u4e0e\u5bfc\u822a\u7f51\u683c\u6838\u5fc3",
         "AcceptsFeedback": true,
         "DownloadLinkInstall": "https://github.com/hatoya-china/ffxiv_navmesh/releases/download/v1.0.0/vnavmesh.zip",
         "DownloadLinkUpdate": "https://github.com/hatoya-china/ffxiv_navmesh/releases/download/v1.0.0/vnavmesh.zip",

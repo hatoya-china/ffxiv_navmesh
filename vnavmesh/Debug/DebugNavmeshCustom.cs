@@ -210,19 +210,19 @@ class DebugNavmeshCustom : IDisposable
 
         using (var d = ImRaii.Disabled(_navmesh.CurrentState == AsyncBuilder.State.InProgress))
         {
-            if (ImGui.Button("Rebuild navmesh"))
+            if (ImGui.Button("重建网格"))
             {
                 Clear();
                 _navmesh.Rebuild(_settings, true);
             }
             ImGui.SameLine();
-            if (ImGui.Button("Rebuild scene extract only"))
+            if (ImGui.Button("仅重建场景提取"))
             {
                 Clear();
                 _navmesh.Rebuild(_settings, false);
             }
             ImGui.SameLine();
-            ImGui.TextUnformatted($"State: {_navmesh.CurrentState}");
+            ImGui.TextUnformatted($"状态: {_navmesh.CurrentState}");
         }
 
         if (_navmesh.CurrentState != AsyncBuilder.State.Ready)
@@ -231,7 +231,7 @@ class DebugNavmeshCustom : IDisposable
         ImGui.InputFloat("X", ref _dest.X);
         ImGui.InputFloat("Y", ref _dest.Y);
         ImGui.InputFloat("Z", ref _dest.Z);
-        if (ImGui.Button("Pathfind"))
+        if (ImGui.Button("寻路测试"))
         {
             var player = Service.ClientState.LocalPlayer;
             var playerPos = player?.Position ?? default;
@@ -240,14 +240,14 @@ class DebugNavmeshCustom : IDisposable
 
         var navmesh = _navmesh.Navmesh!;
         navmesh.CalcTileLoc((Service.ClientState.LocalPlayer?.Position ?? default).SystemToRecast(), out var playerTileX, out var playerTileZ);
-        _tree.LeafNode($"Player tile: {playerTileX}x{playerTileZ}");
+        _tree.LeafNode($"玩家所在区块: {playerTileX}x{playerTileZ}");
 
         _drawExtracted ??= new(_navmesh.Scene!, _navmesh.Extractor!, _tree, _dd, _coll, _configDirectory);
         _drawExtracted.Draw();
         var intermediates = _navmesh.Intermediates;
         if (intermediates != null)
         {
-            using var n = _tree.Node("Intermediates");
+            using var n = _tree.Node("中间数据");
             if (n.Opened)
             {
                 _debugTiles ??= new PerTile[intermediates.NumTilesX, intermediates.NumTilesZ];
@@ -304,7 +304,7 @@ class DebugNavmeshCustom : IDisposable
             }
         }
 
-        using var dt = _tree.Node("Detour navmesh");
+        using var dt = _tree.Node("Detour 导航网格");
         if (dt.Opened)
             _tree.LeafNode("Loaded mesh replaced with custom build, check Navmesh Manager tab");
     }
