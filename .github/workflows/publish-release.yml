@@ -32,13 +32,23 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    # 新增步骤：手动打包成 zip，确保文件结构正确
+    # 关键修复步骤
     - name: Pack Plugin
       run: |
-        cd vnavmesh/bin/Release/net10.0/
-        zip -r ../../../../vnavmesh.zip vnavmesh.dll vnavmesh.json
+        # 1. 先进入 Release 父目录
+        cd vnavmesh/bin/Release/
 
-    # 修改步骤：上传 zip 到 Release
+        # 2. 尝试进入以 net 开头的子目录 (兼容 net10.0, net10.0-windows 等)
+        # 如果没有子目录，这行报错会被忽略，直接在当前目录打包
+        cd net* || true
+
+        # 3. 打印当前路径确认为准
+        echo "Packing files from: $(pwd)"
+        ls -la # 列出文件供检查
+
+        # 4. 打包所有文件 (*) 到项目根目录的 vnavmesh.zip
+        zip -r ../../../../vnavmesh.zip *
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
@@ -47,37 +57,43 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 核心修复：使用 Python 脚本生成 repo.json，不依赖第三方 Action
     - name: Generate repo.json
       run: |
         import json
         import os
+        import glob
 
-        # 读取构建好的插件清单
-        with open('vnavmesh/bin/Release/net10.0/vnavmesh.json', 'r') as f:
+        # 同样使用通配符查找 json，确保万无一失
+        # 优先查找深层目录
+        json_files = glob.glob('vnavmesh/bin/Release/net*/vnavmesh.json')
+        # 如果找不到，再试着找浅层目录
+        if not json_files:
+            json_files = glob.glob('vnavmesh/bin/Release/vnavmesh.json')
+
+        if not json_files:
+            print("Error: vnavmesh.json not found!")
+            exit(1)
+
+        json_path = json_files[0]
+        print(f"Found json at: {json_path}")
+
+        with open(json_path, 'r') as f:
             plugin_info = json.load(f)
 
-        # 构建下载链接 (自动获取当前 Tag 版本)
         tag = os.environ['GITHUB_REF_NAME']
         repo = os.environ['GITHUB_REPOSITORY']
         download_url = f"https://github.com/{repo}/releases/download/{tag}/vnavmesh.zip"
 
-        # 添加必要字段
         plugin_info['DownloadLinkInstall'] = download_url
         plugin_info['DownloadLinkUpdate'] = download_url
         plugin_info['DownloadLinkTesting'] = download_url
 
-        # 生成 repo.json 列表格式
         repo_json = [plugin_info]
 
-        # 写入文件
         with open('repo.json', 'w') as f:
             json.dump(repo_json, f, indent=4)
-
-        print("repo.json generated successfully!")
       shell: python
 
-    # 最后一步：把生成的 repo.json 推送到 gh-pages 分支
     - name: Deploy to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:
