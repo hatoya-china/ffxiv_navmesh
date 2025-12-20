@@ -32,18 +32,57 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
+    # 新增步骤：手动打包成 zip，确保文件结构正确
+    - name: Pack Plugin
+      run: |
+        cd vnavmesh/bin/Release/net10.0/
+        zip -r ../../../../vnavmesh.zip vnavmesh.dll vnavmesh.json
+
+    # 修改步骤：上传 zip 到 Release
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
-          vnavmesh/bin/Release/net10.0/vnavmesh.dll
-          vnavmesh/bin/Release/net10.0/vnavmesh.json
+        files: vnavmesh.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Update Repo JSON
-      uses: GoatCorp/dalamud-plugin-action@v1
+    # 核心修复：使用 Python 脚本生成 repo.json，不依赖第三方 Action
+    - name: Generate repo.json
+      run: |
+        import json
+        import os
+
+        # 读取构建好的插件清单
+        with open('vnavmesh/bin/Release/net10.0/vnavmesh.json', 'r') as f:
+            plugin_info = json.load(f)
+
+        # 构建下载链接 (自动获取当前 Tag 版本)
+        tag = os.environ['GITHUB_REF_NAME']
+        repo = os.environ['GITHUB_REPOSITORY']
+        download_url = f"https://github.com/{repo}/releases/download/{tag}/vnavmesh.zip"
+
+        # 添加必要字段
+        plugin_info['DownloadLinkInstall'] = download_url
+        plugin_info['DownloadLinkUpdate'] = download_url
+        plugin_info['DownloadLinkTesting'] = download_url
+
+        # 生成 repo.json 列表格式
+        repo_json = [plugin_info]
+
+        # 写入文件
+        with open('repo.json', 'w') as f:
+            json.dump(repo_json, f, indent=4)
+
+        print("repo.json generated successfully!")
+      shell: python
+
+    # 最后一步：把生成的 repo.json 推送到 gh-pages 分支
+    - name: Deploy to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        artifact: vnavmesh/bin/Release/net10.0/
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        publish_branch: gh-pages
+        keep_files: true
+        include_files: repo.json
